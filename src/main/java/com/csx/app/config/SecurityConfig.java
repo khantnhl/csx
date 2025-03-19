@@ -1,16 +1,17 @@
 package com.csx.app.config;
 
 import com.csx.app.repository.UserRepository;
+import com.csx.app.service.UserDao;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,18 +21,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.authentication.AuthenticationProvider;
 
-@Configuration
 @EnableWebSecurity
+@Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JWTAuthFilter jwtAuthFilter;
-    private final UserRepository userRepository;
-
-
-    public SecurityConfig(JWTAuthFilter jwtAuthFilter, UserRepository userRepository) {
-        this.jwtAuthFilter = jwtAuthFilter;
-        this.userRepository = userRepository;
-    }
+    private final UserDao userDao;
 
     /*
         Configures security filter chain for http requests
@@ -45,11 +41,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf-> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated())
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -63,13 +60,13 @@ public class SecurityConfig {
      */
     @Bean
     public UserDetailsService userDetailsService() {
-        return email -> userRepository.findByEmail(email)
-                .map(user-> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getEmail())
-                        .password(user.getPasswordHash())
-                        .authorities("USER")
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found " + email));
+
+        return new UserDetailsService() {
+            @Override
+            public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+                return userDao.findUserByEmail(email);
+            };
+        };
     }
 
     /* custom authentication provider */

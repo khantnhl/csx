@@ -1,9 +1,11 @@
 package com.csx.app.config;
 
+import com.csx.app.service.UserDao;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,15 +19,11 @@ import java.io.IOException;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
+@RequiredArgsConstructor
 public class JWTAuthFilter extends OncePerRequestFilter {
 
-    private final UserDetailsService userDetailsService;
+    private final UserDao userDao;
     private final JWTUtils jwtUtils;
-
-    public JWTAuthFilter(UserDetailsService userDetailsService, JWTUtils jwtUtils) {
-        this.userDetailsService = userDetailsService;
-        this.jwtUtils = jwtUtils;
-    }
 
 
     @Override
@@ -42,7 +40,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         jwtToken = authHeader.substring(7);
         userEmail = jwtUtils.extractUsername(jwtToken);
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDao.findUserByEmail(userEmail);
 
             if(jwtUtils.isTokenValid(jwtToken, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

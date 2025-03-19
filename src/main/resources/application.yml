@@ -16,3 +16,5 @@ spring:
     show-sql: true
   main:
     web-application-type: servlet
+jwt:
+  secret: "KcuTjzeAEe64mcInPJvEs9YpcMXWJgMphIN4teYo0Go="
