@@ -19,7 +19,7 @@ import java.util.function.Function;
 public class JWTUtils {
 
     @Value("${jwt.secret}")
-    private String jwtSecret = "secret";
+    private String jwtSecret;
 
     /*
     * extract username (subject) from token.
@@ -68,7 +68,7 @@ public class JWTUtils {
                 .setSubject(userdetails.getUsername())
                 .claim("authorities", userdetails.getAuthorities())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toHours(24)))
+                .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(24)))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret).compact();
     }
 

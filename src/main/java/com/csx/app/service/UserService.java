@@ -4,6 +4,7 @@ import com.csx.app.model.User;
 import com.csx.app.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,8 +23,9 @@ public class UserService {
         return _userRepository.findAll();
     }
 
-    public User createUser(User user){
-        return _userRepository.save(user);
-    }
 
+    public Optional<User> findByEmail(String email) {
+
+        return _userRepository.findByEmail(email);
+    }
 }

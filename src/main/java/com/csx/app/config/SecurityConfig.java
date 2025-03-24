@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     /*
         Configures security filter chain for http requests
-        - permits all requests to "api/auth/**" route but not others
+        - permits all requests to "api/v1/auth/**" route but not others
         - set up stateless session management (no cookies)
         - add JWT filter before username/password authentication
     * */

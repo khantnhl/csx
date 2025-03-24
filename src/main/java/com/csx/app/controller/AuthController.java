@@ -5,16 +5,12 @@ import com.csx.app.model.User;
 import com.csx.app.repository.UserRepository;
 import com.csx.app.service.UserDao;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,9 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -42,7 +36,7 @@ public class AuthController {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            user.getUsername(),
+                            user.getEmail(),
                             user.getPasswordHash()
                     )
             );
@@ -61,8 +55,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user){
+
         if(userRepository.findByEmail(user.getEmail()).isPresent()){
-            ResponseEntity.badRequest().body("User Exists!");
+            return ResponseEntity.badRequest().body("User Exists!");
         }
 
         User newuser = new User();
@@ -76,9 +71,11 @@ public class AuthController {
         //generate JWT Token
         final UserDetails userDetails = userdao.findUserByEmail(savedUser.getEmail());
         final Map<String, Object> claims = new HashMap<>();
+
         final String token = jwtUtils.generateToken(userDetails, claims);
 
-        return ResponseEntity.ok("Registered Successfully!" + token);
+        //returns token
+        return ResponseEntity.ok(token);
     }
 
 
